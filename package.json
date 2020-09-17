@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node remove_backgrounds.js",
+    "removeBackground": "node removeBackground.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

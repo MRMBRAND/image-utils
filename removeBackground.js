@@ -8,8 +8,8 @@ var path = require('path');
 var gm = require('gm').subClass({imageMagick: true});
 const readline = require('readline');
 
-async function processLineByLine() {
-  const fileStream = fs.createReadStream('filenamesToProcess.txt');
+async function processFilenamesFromFile() {
+  const fileStream = fs.createReadStream('removeBackgroundFilenames.txt');
 
   const rl = readline.createInterface({
     input: fileStream,
@@ -24,11 +24,11 @@ async function processLineByLine() {
     // Each line in input.txt will be successively available here as `line`.
     filenames.push(line);
   }
-  process_filenames(sourceFolder, targetFolder, filenames);
+  processFilenames(sourceFolder, targetFolder, filenames);
 }
 
 
-function remove_background(image) {
+function removeBackground(image) {
     image.fill("none");
     image.fuzz(3, true);
     image.draw("alpha 0,0 floodfill");
@@ -39,17 +39,17 @@ function remove_background(image) {
     return image;
 }
 
-function process_folder(sourceFolder, targetFolder) {
+function processFolder(sourceFolder, targetFolder) {
     fs.readdir(sourceFolder, function (err, filenames) {
         //handling error
         if (err) {
             return console.log('Unable to scan directory: ' + err);
         } 
-        process_filenames(sourceFolder, targetFolder, filenames);
+        processFilenames(sourceFolder, targetFolder, filenames);
     });
 }
 
-function process_filenames(sourceFolder, targetFolder, filenames){
+function processFilenames(sourceFolder, targetFolder, filenames){
     //listing all files using forEach
     filenames.forEach(function (filename) {
         var sourceFilePath = path.join(sourceFolder, filename);
@@ -57,18 +57,18 @@ function process_filenames(sourceFolder, targetFolder, filenames){
         var fileExtension = filename.split('.').pop();
         if (fileExtension == 'jpg') {
             var sourceImage = gm(sourceFilePath);
-            var targetImage = remove_background(sourceImage);
+            var targetImage = removeBackground(sourceImage);
             var targetFilenameLowRes = path.join(targetFolder, 'low_res', fileNameWithoutExtension) + '.png';  //100px high
             var targetFilenameHighRes = path.join(targetFolder, 'high_res', fileNameWithoutExtension) + '.png'; //900px high
             var targetImageHighRes = targetImage.resize(null, 900);
-            save_image(targetImageHighRes, targetFilenameHighRes); 
+            saveImage(targetImageHighRes, targetFilenameHighRes); 
             var targetImageLowRes = targetImage.resize(null, 100);
-            save_image(targetImageLowRes, targetFilenameLowRes); 
+            saveImage(targetImageLowRes, targetFilenameLowRes); 
         }
     });
 }
 
-function save_image(targetImage, targetFilename) {
+function saveImage(targetImage, targetFilename) {
     targetImage.write(targetFilename, function (err) {
         if (err) {
             return console.log('error: ' + targetFilename + ' (' + err + ')');
@@ -77,5 +77,5 @@ function save_image(targetImage, targetFilename) {
     });
 }
 
-processLineByLine();
-//process_folder(sourceFolder, targetFolder);
+processFilenamesFromFile();
+//processFolder(sourceFolder, targetFolder);
