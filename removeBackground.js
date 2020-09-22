@@ -39,43 +39,43 @@ function removeBackground(image) {
     return image;
 }
 
-function processFolder(sourceFolder, targetFolder) {
-    fs.readdir(sourceFolder, function (err, filenames) {
-        //handling error
-        if (err) {
-            return console.log('Unable to scan directory: ' + err);
-        } 
-        processFilenames(sourceFolder, targetFolder, filenames);
+function processFilenames(sourceFolder, targetFolder, filenames){
+    return filenames.reduce( async (previousPromise, filename) => {
+        await previousPromise;
+        return processFilename(sourceFolder, targetFolder, filename);
+    }, Promise.resolve()).then(function(){
+        console.log("All done!");
     });
 }
 
-function processFilenames(sourceFolder, targetFolder, filenames){
-    //listing all files using forEach
-    filenames.forEach(function (filename) {
-        var sourceFilePath = path.join(sourceFolder, filename);
-        var fileNameWithoutExtension = filename.split('.').slice(0, -1).join('.');
-        var fileExtension = filename.split('.').pop();
-        if (fileExtension == 'jpg') {
-            var sourceImage = gm(sourceFilePath);
-            var targetImage = removeBackground(sourceImage);
-            var targetFilenameLowRes = path.join(targetFolder, 'low_res', fileNameWithoutExtension) + '.png';  //100px high
-            var targetFilenameHighRes = path.join(targetFolder, 'high_res', fileNameWithoutExtension) + '.png'; //900px high
-            var targetImageHighRes = targetImage.resize(null, 900);
-            saveImage(targetImageHighRes, targetFilenameHighRes); 
-            var targetImageLowRes = targetImage.resize(null, 100);
-            saveImage(targetImageLowRes, targetFilenameLowRes); 
-        }
-    });
+function processFilename(sourceFolder, targetFolder, filename) {
+    var sourceFilePath = path.join(sourceFolder, filename);
+    var fileNameWithoutExtension = filename.split('.').slice(0, -1).join('.');
+    var fileExtension = filename.split('.').pop();
+    if (fileExtension == 'jpg') {
+        var sourceImage = gm(sourceFilePath);
+        var targetImage = removeBackground(sourceImage);
+        var targetFilenameLowRes = path.join(targetFolder, 'low_res', fileNameWithoutExtension) + '.png';  //100px high
+        var targetFilenameHighRes = path.join(targetFolder, 'high_res', fileNameWithoutExtension) + '.png'; //900px high
+        var targetImageHighRes = targetImage.resize(null, 900);
+        var highResImageSavePromise = saveImage(targetImageHighRes, targetFilenameHighRes); 
+        var targetImageLowRes = targetImage.resize(null, 100);
+        var lowResImageSavePromise = saveImage(targetImageLowRes, targetFilenameLowRes); 
+    }
+    return Promise.all([highResImageSavePromise, lowResImageSavePromise]);
 }
 
 function saveImage(targetImage, targetFilename) {
-    targetImage.write(targetFilename, function (err) {
-        if (err) {
-            return console.log('error: ' + targetFilename + ' (' + err + ')');
-        }
-        console.log('success: ' + targetFilename);
+    return new Promise((resolve, reject) => {
+        targetImage.write(targetFilename, function (err) {
+            if (err) {
+                console.log('error: ' + targetFilename + ' (' + err + ')');
+                return reject();
+            }
+            console.log('success: ' + targetFilename);
+            resolve();
+        });
     });
 }
 
 processFilenamesFromFile();
-//processFolder(sourceFolder, targetFolder);
