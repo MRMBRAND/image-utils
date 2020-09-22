@@ -3,7 +3,7 @@ var sourceFolder = './sourceFolder';  // where are the files that I want to proc
 var targetFolder = './targetFolder';  // where should processed files be saved to?
 // CONFIGURATION - END
 
-var fs = require('fs');
+var fs = require('graceful-fs');
 var path = require('path');
 var gm = require('gm').subClass({imageMagick: true});
 const readline = require('readline');
